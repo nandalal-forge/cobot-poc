@@ -1,0 +1,29 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# ROS 2
+simulation/ros2_ws/build/
+simulation/ros2_ws/install/
+simulation/ros2_ws/log/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Environment / secrets
+.env
+*.env
+
+# Docker volumes (never commit data)
+infra/pgdata/
+infra/grafdata/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Maps (large binary files)
+*.pgm
