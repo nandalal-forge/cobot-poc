@@ -3,3 +3,61 @@
   <world name="lab_room">
     <include><uri>model://sun</uri></include>
     <include><uri>model://ground_plane</uri></include>
+    
+
+    <!-- North Wall-->
+    <model name = "wall_n"><static>true</static>
+      <link name = "1">
+        <collision name = "c"><geometry><box><size>10 0.2 2.5</size></box></geometry></collision>
+        <visual name = "v"><geometry><box><size>10 0.2 2.5</size></box></geometry></visual>
+      </link><pose>0 5 1.25 0 0 0</pose>
+    </model>
+
+        <!-- South Wall need to change it ya-->
+    <model name = "wall_s"><static>true</static>
+      <link name = "1">
+        <collision name = "c"><geometry><box><size>10 0.2 2.5</size></box></geometry></collision>
+        <visual name = "v"><geometry><box><size>10 0.2 2.5</size></box></geometry></visual>
+      </link><pose>0 -5 1.25 0 0 0</pose>
+    </model>
+
+        <!-- East Wall need to change it ya-->
+    <model name = "wall_e"><static>true</static>
+      <link name = "1">
+        <collision name = "c"><geometry><box><size>10 0.2 2.5</size></box></geometry></collision>
+        <visual name = "v"><geometry><box><size>10 0.2 2.5</size></box></geometry></visual>
+      </link><pose>5 0 1.25 0 0 0</pose>
+    </model>
+
+        <!-- West Wall need to change it ya-->
+    <model name = "wall_w"><static>true</static>
+      <link name = "1">
+        <collision name = "c"><geometry><box><size>10 0.2 2.5</size></box></geometry></collision>
+        <visual name = "v"><geometry><box><size>10 0.2 2.5</size></box></geometry></visual>
+      </link><pose>-5 0 1.25 0 0 0</pose>
+    </model>
+
+    <model name = "bench1"><static>true</static>
+      <link name = "1">
+        <collision name = "c"><geometry><box><size>2 0.8 0.9 </size></box></geometry></collision>
+        <visual name = "v"><geometry><box><size>2 0.8 0.9 </size></box></geometry></visual>
+      </link><pose>2 2 0.45 0 0 0</pose>
+    </model>
+
+<!-- bench 2 needs to be update -->
+    <model name = "bench2"><static>true</static>
+      <link name = "1">
+        <collision name = "c"><geometry><box><size>2 0.8 0.9 </size></box></geometry></collision>
+        <visual name = "v"><geometry><box><size>2 0.8 0.9 </size></box></geometry></visual>
+      </link><pose>-2 -2 0.45 0 0 0</pose>
+    </model>
+
+    <!-- bench 3 needs to be update -->
+    <model name = "bench3"><static>true</static>
+      <link name = "1">
+        <collision name = "c"><geometry><box><size>2 0.8 0.9 </size></box></geometry></collision>
+        <visual name = "v"><geometry><box><size>2 0.8 0.9 </size></box></geometry></visual>
+      </link><pose>3 -3 0.45 0 0 0</pose>
+    </model>
+  </world>
+</sdf>        
