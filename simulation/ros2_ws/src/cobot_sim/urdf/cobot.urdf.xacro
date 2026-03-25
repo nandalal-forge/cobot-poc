@@ -54,7 +54,7 @@
     <axis xyz="0 0 1"/>
   </joint>
 
-  <gazebo>
+<gazebo>
     <plugin name="diff_drive" filename="libgazebo_ros_diff_drive.so">
       <left_joint>left_wheel_joint</left_joint>
       <right_joint>right_wheel_joint</right_joint>
@@ -62,8 +62,12 @@
       <wheel_diameter>0.1</wheel_diameter>
       <publish_odom>true</publish_odom>
       <publish_odom_tf>true</publish_odom_tf>
+      <publish_wheel_tf>true</publish_wheel_tf>
+      <odometry_frame>odom</odometry_frame>
+      <robot_base_frame>base_link</robot_base_frame>
       <ros>
         <remapping>cmd_vel:=/cmd_vel</remapping>
+        <remapping>odom:=/odom</remapping>
       </ros>
     </plugin>
   </gazebo>
