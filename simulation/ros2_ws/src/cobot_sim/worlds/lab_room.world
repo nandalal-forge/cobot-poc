@@ -24,16 +24,16 @@
         <!-- East Wall need to change it ya-->
     <model name = "wall_e"><static>true</static>
       <link name = "1">
-        <collision name = "c"><geometry><box><size>10 0.2 2.5</size></box></geometry></collision>
-        <visual name = "v"><geometry><box><size>10 0.2 2.5</size></box></geometry></visual>
+        <collision name = "c"><geometry><box><size>0.2 10 2.5</size></box></geometry></collision>
+        <visual name = "v"><geometry><box><size>0.2 10 2.5</size></box></geometry></visual>
       </link><pose>5 0 1.25 0 0 0</pose>
     </model>
 
         <!-- West Wall need to change it ya-->
     <model name = "wall_w"><static>true</static>
       <link name = "1">
-        <collision name = "c"><geometry><box><size>10 0.2 2.5</size></box></geometry></collision>
-        <visual name = "v"><geometry><box><size>10 0.2 2.5</size></box></geometry></visual>
+        <collision name = "c"><geometry><box><size>0.2 10 2.5</size></box></geometry></collision>
+        <visual name = "v"><geometry><box><size>0.2 10 2.5</size></box></geometry></visual>
       </link><pose>-5 0 1.25 0 0 0</pose>
     </model>
 
