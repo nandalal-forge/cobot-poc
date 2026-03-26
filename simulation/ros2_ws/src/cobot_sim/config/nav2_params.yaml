@@ -40,6 +40,8 @@ amcl:
     global_frame_id: map
     odom_frame_id: odom
     scan_topic: /scan
+    min_particles: 500
+    max_particles: 2000
 
 lifecycle_manager:
   ros__parameters:

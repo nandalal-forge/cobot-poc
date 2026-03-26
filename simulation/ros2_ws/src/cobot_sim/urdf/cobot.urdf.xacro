@@ -1,9 +1,11 @@
 <?xml version="1.0"?>
 <robot name="cobot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+  <!-- Base body -->
   <link name="base_link">
     <visual>
       <geometry><cylinder radius="0.2" length="0.15"/></geometry>
+      <material name="blue"><color rgba="0.0 0.0 0.8 1.0"/></material>
     </visual>
     <collision>
       <geometry><cylinder radius="0.2" length="0.15"/></geometry>
@@ -14,6 +16,7 @@
     </inertial>
   </link>
 
+  <!-- Left wheel -->
   <link name="left_wheel">
     <visual>
       <geometry><cylinder radius="0.05" length="0.04"/></geometry>
@@ -26,7 +29,6 @@
       <inertia ixx="0.001" iyy="0.001" izz="0.001" ixy="0" ixz="0" iyz="0"/>
     </inertial>
   </link>
-
   <joint name="left_wheel_joint" type="continuous">
     <parent link="base_link"/>
     <child link="left_wheel"/>
@@ -34,6 +36,7 @@
     <axis xyz="0 0 1"/>
   </joint>
 
+  <!-- Right wheel -->
   <link name="right_wheel">
     <visual>
       <geometry><cylinder radius="0.05" length="0.04"/></geometry>
@@ -46,7 +49,6 @@
       <inertia ixx="0.001" iyy="0.001" izz="0.001" ixy="0" ixz="0" iyz="0"/>
     </inertial>
   </link>
-
   <joint name="right_wheel_joint" type="continuous">
     <parent link="base_link"/>
     <child link="right_wheel"/>
@@ -54,7 +56,53 @@
     <axis xyz="0 0 1"/>
   </joint>
 
-<gazebo>
+  <!-- RealSense D435i camera link -->
+  <link name="camera_link">
+    <visual>
+      <geometry><box size="0.025 0.090 0.025"/></geometry>
+      <material name="black"><color rgba="0.0 0.0 0.0 1.0"/></material>
+    </visual>
+    <collision>
+      <geometry><box size="0.025 0.090 0.025"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.072"/>
+      <inertia ixx="0.001" iyy="0.001" izz="0.001" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <origin xyz="0.2 0 0.05" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Camera optical frame -->
+  <link name="camera_depth_frame"/>
+  <joint name="camera_depth_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child link="camera_depth_frame"/>
+    <origin xyz="0 0 0" rpy="-1.5707 0 -1.5707"/>
+  </joint>
+
+  <!-- IMU link (MPU6050) -->
+  <link name="imu_link">
+    <visual>
+      <geometry><box size="0.02 0.02 0.005"/></geometry>
+      <material name="green"><color rgba="0.0 0.8 0.0 1.0"/></material>
+    </visual>
+    <inertial>
+      <mass value="0.01"/>
+      <inertia ixx="0.0001" iyy="0.0001" izz="0.0001" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <origin xyz="0 0 0.05" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Diff-drive plugin -->
+  <gazebo>
     <plugin name="diff_drive" filename="libgazebo_ros_diff_drive.so">
       <left_joint>left_wheel_joint</left_joint>
       <right_joint>right_wheel_joint</right_joint>
@@ -62,16 +110,13 @@
       <wheel_diameter>0.1</wheel_diameter>
       <publish_odom>true</publish_odom>
       <publish_odom_tf>true</publish_odom_tf>
-      <publish_wheel_tf>true</publish_wheel_tf>
-      <odometry_frame>odom</odometry_frame>
-      <robot_base_frame>base_link</robot_base_frame>
       <ros>
         <remapping>cmd_vel:=/cmd_vel</remapping>
-        <remapping>odom:=/odom</remapping>
       </ros>
     </plugin>
   </gazebo>
 
+  <!-- LiDAR sensor -->
   <gazebo reference="base_link">
     <sensor name="laser" type="ray">
       <pose>0 0 0.1 0 0 0</pose>
@@ -85,16 +130,54 @@
             <max_angle>3.14159</max_angle>
           </horizontal>
         </scan>
-        <range>
-          <min>0.1</min>
-          <max>10.0</max>
-        </range>
+        <range><min>0.1</min><max>10.0</max></range>
       </ray>
       <plugin name="laser" filename="libgazebo_ros_ray_sensor.so">
-        <ros>
-          <remapping>~/out:=scan</remapping>
-        </ros>
+        <ros><remapping>~/out:=scan</remapping></ros>
         <output_type>sensor_msgs/LaserScan</output_type>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- RealSense D435i depth camera plugin -->
+  <gazebo reference="camera_link">
+    <sensor name="depth_camera" type="depth">
+      <update_rate>30</update_rate>
+      <always_on>true</always_on>
+      <camera>
+        <horizontal_fov>1.5184</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip><near>0.1</near><far>10.0</far></clip>
+      </camera>
+      <plugin name="depth_camera" filename="libgazebo_ros_camera.so">
+        <ros>
+          <remapping>~/image_raw:=/camera/color/image_raw</remapping>
+          <remapping>~/depth/image_raw:=/camera/depth/image_rect_raw</remapping>
+          <remapping>~/points:=/camera/depth/color/points</remapping>
+          <remapping>~/camera_info:=/camera/color/camera_info</remapping>
+        </ros>
+        <camera_name>camera</camera_name>
+        <frame_name>camera_depth_frame</frame_name>
+        <min_depth>0.1</min_depth>
+        <max_depth>10.0</max_depth>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- MPU6050 IMU plugin -->
+  <gazebo reference="imu_link">
+    <sensor name="imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100</update_rate>
+      <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+        <ros>
+          <remapping>~/out:=/imu/data</remapping>
+        </ros>
+        <initial_orientation_as_reference>false</initial_orientation_as_reference>
       </plugin>
     </sensor>
   </gazebo>

@@ -14,3 +14,4 @@ slam_toolbox:
     scan_topic: /scan
     transform_timeout: 0.5
     tf_buffer_duration: 30.0
+    use_multithread: true
