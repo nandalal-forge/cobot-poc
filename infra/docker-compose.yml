@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: cobotdb
       POSTGRES_USER: forge
-      POSTGRES_PASSWORD: admin
+      POSTGRES_PASSWORD: admin123
     ports:
       - "5432:5432"
     volumes:
@@ -40,6 +40,9 @@ services:
     image: grafana/grafana:10.2.0
     ports:
       - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: forge
+      GF_SECURITY_ADMIN_PASSWORD: admin123
     volumes:
       - grafdata:/var/lib/grafana
 
