@@ -1,56 +1,77 @@
 #!/usr/bin/env python3
-
 import rclpy
 from rclpy.node import Node
-from nav_msgs.msg import Odometry
-from sensor_msgs.msg import Imu
-import paho.mqtt.client as mqtt
+from rclpy.action import ActionClient
+from rclpy.callback_groups import ReentrantCallbackGroup
+from rclpy.executors import MultiThreadedExecutor
+from nav2_msgs.action import NavigateToPose
 import json
-import sys
-sys.path.insert(0, '/home/forge/cobot-poc')
+import paho.mqtt.client as mqtt
+import threading
 
-class MQTTBridge(Node):
+class WaypointExecutor(Node):
     def __init__(self):
-        super().__init__('mqtt_bridge')
+        super().__init__('waypoint_executor')
+        self.cb_group = ReentrantCallbackGroup()
+        self._client = ActionClient(self, NavigateToPose, 'navigate_to_pose',
+                                    callback_group=self.cb_group)
         self.mqtt = mqtt.Client()
         self.mqtt.connect('localhost', 1883)
+        self.mqtt.subscribe('cobot/waypoints')
+        self.mqtt.on_message = self.on_waypoints
+        self.mqtt.loop_start()
+        self.get_logger().info('Waypoint executor ready')
 
-        from backend.app.services.influx_writer import write_position, write_imu
-        self.write_position = write_position
-        self.write_imu = write_imu
+    def on_waypoints(self, client, userdata, msg):
+        waypoints = json.loads(msg.payload.decode())
+        self.get_logger().info(f'Received {len(waypoints)} waypoints')
+        thread = threading.Thread(target=self.execute_waypoints, args=(waypoints,))
+        thread.daemon = True
+        thread.start()
 
-        self.create_subscription(Odometry, '/odom', self.odom_cb, 10)
-        self.create_subscription(Imu, '/imu/data', self.imu_cb, 10)
-        self.get_logger().info('MQTT bridge started — odom + IMU + InfluxDB')
+    def execute_waypoints(self, waypoints):
+        for i, (x, y) in enumerate(waypoints):
+            success = self.send_goal(x, y)
+            self.mqtt.publish('cobot/progress',
+                json.dumps({
+                    'waypoint': i + 1,
+                    'total': len(waypoints),
+                    'percent': round((i + 1) / len(waypoints) * 100, 1),
+                    'x': x, 'y': y
+                }))
+            self.get_logger().info(f'Waypoint {i+1}/{len(waypoints)} done')
 
-    def odom_cb(self, msg):
-        x = round(msg.pose.pose.position.x, 3)
-        y = round(msg.pose.pose.position.y, 3)
-        payload = json.dumps({'x': x, 'y': y})
-        self.mqtt.publish('cobot/position', payload)
-        try:
-            self.write_position('cobot_01', x, y)
-        except Exception as e:
-            self.get_logger().warn(f'InfluxDB write failed: {e}')
+    def send_goal(self, x, y):
+        goal = NavigateToPose.Goal()
+        goal.pose.header.frame_id = 'map'
+        goal.pose.pose.position.x = float(x)
+        goal.pose.pose.position.y = float(y)
+        goal.pose.pose.orientation.w = 1.0
+        self._client.wait_for_server()
+        self.get_logger().info(f'Navigating to ({x}, {y})')
+        send_goal_future = self._client.send_goal_async(goal)
+        event = threading.Event()
+        result_container = {}
 
-    def imu_cb(self, msg):
-        data = {
-            'ax': round(msg.linear_acceleration.x, 3),
-            'ay': round(msg.linear_acceleration.y, 3),
-            'az': round(msg.linear_acceleration.z, 3),
-            'gx': round(msg.angular_velocity.x, 3),
-            'gy': round(msg.angular_velocity.y, 3),
-            'gz': round(msg.angular_velocity.z, 3),
-        }
-        self.mqtt.publish('cobot/imu', json.dumps(data))
-        try:
-            self.write_imu('cobot_01', **data)
-        except Exception as e:
-            self.get_logger().warn(f'InfluxDB IMU write failed: {e}')
+        def goal_response(future):
+            handle = future.result()
+            if not handle.accepted:
+                self.get_logger().warn('Goal rejected')
+                event.set()
+                return
+            result_future = handle.get_result_async()
+            result_future.add_done_callback(lambda f: (result_container.update({'done': True}), event.set()))
+
+        send_goal_future.add_done_callback(goal_response)
+        event.wait(timeout=60.0)
+        return result_container.get('done', False)
 
 def main():
     rclpy.init()
-    rclpy.spin(MQTTBridge())
+    executor = MultiThreadedExecutor()
+    node = WaypointExecutor()
+    executor.add_node(node)
+    executor.spin()
 
 if __name__ == '__main__':
     main()
