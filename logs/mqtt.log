@@ -1,0 +1,2 @@
+[INFO] [1774615075.994463834] [mqtt_bridge]: InfluxDB connected
+[INFO] [1774615076.793328397] [mqtt_bridge]: MQTT bridge started — odom + IMU + InfluxDB

@@ -11,6 +11,8 @@ install(DIRECTORY launch urdf worlds config nodes maps
 install(PROGRAMS
   nodes/mqtt_bridge.py
   nodes/waypoint_executor.py
+  nodes/camera_viewer.py
+  nodes/depth_map_fusion.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
